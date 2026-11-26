@@ -1,0 +1,14 @@
+# secretos y datos locales
+backend/.env
+backend/data/
+backend/logs/
+backend/config/*.tmp
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# Node
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo

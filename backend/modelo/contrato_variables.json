@@ -1,0 +1,61 @@
+{
+  "modelo": "LSTM16-B-ensamble3",
+  "run_id": "20261120_144755",
+  "fuente": "BD2_MEXC15_Cap7a11_v2.1.ipynb (Colab T4)",
+  "orden_pares_onehot": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "XRPUSDT",
+    "BNBUSDT",
+    "SOLUSDT",
+    "ADAUSDT",
+    "DOGEUSDT",
+    "LTCUSDT",
+    "TRXUSDT",
+    "LINKUSDT",
+    "DOTUSDT",
+    "BCHUSDT",
+    "XLMUSDT",
+    "ATOMUSDT",
+    "ETCUSDT"
+  ],
+  "seq_orden_antiguo_a_reciente": [
+    "r_lag_19",
+    "r_lag_18",
+    "r_lag_17",
+    "r_lag_16",
+    "r_lag_15",
+    "r_lag_14",
+    "r_lag_13",
+    "r_lag_12",
+    "r_lag_11",
+    "r_lag_10",
+    "r_lag_09",
+    "r_lag_08",
+    "r_lag_07",
+    "r_lag_06",
+    "r_lag_05",
+    "r_lag_04",
+    "r_lag_03",
+    "r_lag_02",
+    "r_lag_01",
+    "r_lag_00"
+  ],
+  "indicadores": [
+    "dist_sma20",
+    "vol20"
+  ],
+  "definiciones": {
+    "r_t": "close_t/close_{t-1}-1",
+    "dist_sma20": "close_t/mean(close_{t-19..t})-1",
+    "vol20": "std muestral (ddof=1) de r_{t-19..t}, sin anualizar"
+  },
+  "objetivo": "close_{t+1}/close_t - 1",
+  "intervalo": "1d (UTC)",
+  "regla_trading": {
+    "delta": 0.003,
+    "filtro_SMA20": false,
+    "descripcion": "comprar si pronóstico > delta; en otro caso efectivo"
+  },
+  "huella_config_congelada": "8e746e0d863afb02e185765dbd6f508acc6c4a39dbc0b3b6b440ae10c70b65d0"
+}

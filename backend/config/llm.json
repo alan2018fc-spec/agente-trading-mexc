@@ -1,0 +1,9 @@
+{
+  "modelo_permitido": "qwen2.5:3b",
+  "temperatura": 0.0,
+  "timeout_s": 120,
+  "reintentos": 3,
+  "usar_herramientas": true,
+  "usar_herramientas_en_replay": false,
+  "max_caracteres_justificacion": 240
+}

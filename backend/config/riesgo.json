@@ -1,0 +1,39 @@
+{
+  "capital_inicial": 50000,
+  "costo_por_lado": 0.0,
+  "deslizamiento": 0.0005,
+  "exposicion_max_por_par": 0.0667,
+  "exposicion_max_total": 1.0,
+  "perdida_diaria_max": 0.05,
+  "antiguedad_max_horas": 26,
+  "max_errores_consecutivos": 3,
+  "pares_permitidos": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "XRPUSDT",
+    "BNBUSDT",
+    "SOLUSDT",
+    "ADAUSDT",
+    "DOGEUSDT",
+    "LTCUSDT",
+    "TRXUSDT",
+    "LINKUSDT",
+    "DOTUSDT",
+    "BCHUSDT",
+    "XLMUSDT",
+    "ATOMUSDT",
+    "ETCUSDT"
+  ],
+  "acciones_permitidas": [
+    "COMPRAR",
+    "MANTENER",
+    "VENDER"
+  ],
+  "_notas": {
+    "exposicion_max_por_par": "1/15 del patrimonio al inicio del ciclo",
+    "perdida_diaria_max": "si el patrimonio cae 5 % entre dos cierres diarios se bloquean nuevas órdenes",
+    "antiguedad_max_horas": "vela más vieja que esto = dato atrasado, no se decide",
+    "deslizamiento": "supuesto: compra a ask·(1+0.05 %), venta a bid·(1−0.05 %)",
+    "costo_por_lado": "0 % (MEXC, sección 15 del protocolo)"
+  }
+}

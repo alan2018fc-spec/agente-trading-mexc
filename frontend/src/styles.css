@@ -1,0 +1,77 @@
+:root {
+  --fondo: #0d1117; --panel: #151b24; --borde: #263041; --texto: #e6edf3; --tenue: #8b97a8;
+  --azul: #4f8cff; --verde: #3fb950; --rojo: #f85149; --ambar: #d29922;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--texto); background: var(--fondo);
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.app { max-width: 1400px; margin: 0 auto; padding: 16px 20px 40px; }
+header { display: flex; gap: 24px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  background: var(--panel); border: 1px solid var(--borde); border-radius: 12px; padding: 14px 18px; }
+.etiqueta { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--tenue); }
+.modo { font-size: 26px; font-weight: 800; color: var(--azul); letter-spacing: .02em; }
+.sub { font-size: 12px; color: var(--tenue); margin-top: 2px; max-width: 380px; }
+.estado { font-weight: 700; font-size: 18px; }
+.estado .punto { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--tenue); margin-right: 6px; }
+.estado-ACTIVO .punto { background: var(--verde); box-shadow: 0 0 8px var(--verde); }
+.estado-PAUSADO .punto, .estado-BLOQUEADO .punto { background: var(--ambar); }
+.estado-PAUSADO_ERROR .punto { background: var(--rojo); }
+.controles { display: flex; gap: 8px; flex-wrap: wrap; }
+button { background: #1f2836; color: var(--texto); border: 1px solid var(--borde); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 14px; }
+button:hover:not(:disabled) { border-color: var(--azul); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.primario { background: var(--azul); border-color: var(--azul); color: #fff; font-weight: 600; }
+button.peligro { border-color: #6e2b2b; color: #ffb3ad; }
+button.tenue { color: var(--tenue); }
+.franja { display: flex; gap: 22px; flex-wrap: wrap; font-size: 13px; color: var(--tenue); padding: 10px 4px; }
+.aviso { background: #2a2210; border: 1px solid var(--ambar); padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
+nav { display: flex; gap: 4px; border-bottom: 1px solid var(--borde); margin: 4px 0 14px; }
+nav button { background: none; border: none; border-bottom: 2px solid transparent; border-radius: 0; padding: 10px 14px; color: var(--tenue); }
+nav button.activa { color: var(--texto); border-bottom-color: var(--azul); font-weight: 600; }
+section { background: var(--panel); border: 1px solid var(--borde); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+section.dos { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 900px) { section.dos { grid-template-columns: 1fr; } }
+section.tarjetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; background: none; border: none; padding: 0; }
+.tarjeta { background: var(--panel); border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; }
+.tarjeta .valor { font-size: 22px; font-weight: 700; }
+.tarjeta .nombre { font-size: 12px; color: var(--tenue); margin-top: 4px; }
+h2 { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--tenue); margin: 0 0 10px; }
+h3 { font-size: 14px; margin: 16px 0 8px; }
+.tabla { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; color: var(--tenue); font-weight: 500; border-bottom: 1px solid var(--borde); padding: 6px 8px; white-space: nowrap; }
+td { border-bottom: 1px solid #1d2532; padding: 6px 8px; vertical-align: top; }
+td.motivo { max-width: 340px; color: #c9d1d9; }
+.pos { color: var(--verde); } .neg { color: var(--rojo); }
+.ok { color: var(--verde); } .rechazo { color: var(--rojo); }
+.fila-rechazo td { background: #1f1416; }
+.nivel-ERROR td { color: #ffb3ad; } .nivel-ALERTA td { color: #f2cc60; }
+.accion { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 10px; background: #202938; white-space: nowrap; }
+.accion-COMPRAR { color: var(--verde); } .accion-VENDER { color: var(--rojo); } .accion-MANTENER { color: var(--tenue); }
+.accion-SIN_ORDEN, .accion-SIN_DECISION { color: var(--ambar); }
+.chip { border: 1px solid var(--azul); color: var(--azul); border-radius: 10px; padding: 1px 8px; font-size: 11px; }
+.vacio, .nota { color: var(--tenue); font-size: 13px; }
+.error { color: var(--rojo); }
+label { display: block; margin: 8px 0; font-size: 13px; color: var(--tenue); }
+label input[type=number] { display: block; margin-top: 4px; background: #0f141b; color: var(--texto); border: 1px solid var(--borde); border-radius: 6px; padding: 6px 8px; width: 200px; }
+.grafica { width: 100%; max-width: 900px; height: auto; margin-top: 12px; display: block; }
+.grafica .eje, .grafica .leyenda { fill: var(--tenue); font-size: 11px; }
+.grafica .ref { stroke: #3a4556; stroke-dasharray: 4 4; }
+.login { max-width: 380px; margin: 12vh auto; background: var(--panel); border: 1px solid var(--borde); border-radius: 12px; padding: 24px; }
+.login input { width: 100%; padding: 10px; margin: 12px 0; background: #0f141b; color: var(--texto); border: 1px solid var(--borde); border-radius: 8px; }
+.cargando { padding: 40px; text-align: center; color: var(--tenue); }
+footer { text-align: center; font-size: 12px; color: var(--tenue); margin-top: 24px; }
+code { background: #0f141b; padding: 1px 5px; border-radius: 4px; }
+
+.cab { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.cerebro { background: radial-gradient(ellipse at 60% 40%, #1b2440 0%, #0b0f18 70%); }
+.constelacion, .redneuronal { width: 100%; height: auto; display: block; }
+.constelacion .grupo, .redneuronal .grupo { fill: #6b7a90; font-size: 10px; letter-spacing: .14em; }
+.constelacion .etq, .redneuronal .etq { fill: #8b97a8; font-size: 10px; }
+.constelacion .nombre-nodo, .redneuronal .nombre-nodo { fill: #e6edf3; font-size: 11.5px; font-weight: 600; }
+.redneuronal .valor-red { fill: #e6edf3; font-size: 15px; font-weight: 700; }
+.redneuronal .etq.pos { fill: var(--verde); }
+.selector { display: flex; gap: 4px; flex-wrap: wrap; margin: 6px 0; }
+.selector button { padding: 4px 10px; font-size: 12px; }
+.selector button.activa { background: var(--azul); border-color: var(--azul); color: #fff; }
+nav { flex-wrap: wrap; }

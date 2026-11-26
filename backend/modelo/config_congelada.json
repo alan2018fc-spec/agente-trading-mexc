@@ -1,0 +1,83 @@
+{
+  "run_id": "20261120_144755",
+  "pares": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "XRPUSDT",
+    "BNBUSDT",
+    "SOLUSDT",
+    "ADAUSDT",
+    "DOGEUSDT",
+    "LTCUSDT",
+    "TRXUSDT",
+    "LINKUSDT",
+    "DOTUSDT",
+    "BCHUSDT",
+    "XLMUSDT",
+    "ATOMUSDT",
+    "ETCUSDT"
+  ],
+  "periodo": [
+    "2020-09-01",
+    "2026-11-20"
+  ],
+  "n_lags": 20,
+  "particiones": [
+    {
+      "Conjunto": "TR",
+      "N_ejemplos": 23625,
+      "N_pares": 15,
+      "Primera_emision": "2020-09-21",
+      "Ultima_emision": "2025-01-12",
+      "Primer_objetivo": "2020-09-22",
+      "Ultimo_objetivo": "2025-01-13",
+      "Proporcion_%": 70.0
+    },
+    {
+      "Conjunto": "VA",
+      "N_ejemplos": 5070,
+      "N_pares": 15,
+      "Primera_emision": "2025-01-13",
+      "Ultima_emision": "2025-12-16",
+      "Primer_objetivo": "2025-01-14",
+      "Ultimo_objetivo": "2025-12-17",
+      "Proporcion_%": 15.02
+    },
+    {
+      "Conjunto": "TE",
+      "N_ejemplos": 5055,
+      "N_pares": 15,
+      "Primera_emision": "2025-12-17",
+      "Ultima_emision": "2026-11-18",
+      "Primer_objetivo": "2025-12-18",
+      "Ultimo_objetivo": "2026-11-19",
+      "Proporcion_%": 14.98
+    }
+  ],
+  "mejor_neuronas": {
+    "MLP": 16,
+    "LSTM": 16
+  },
+  "semillas": [
+    11,
+    22,
+    33
+  ],
+  "versiones_por_modelo": {
+    "Lineal": "B",
+    "MLP": "B",
+    "LSTM": "B"
+  },
+  "modelo_pronostico_menor_RMSE_VA": "LSTM (B: + indicadores)",
+  "regla_trading": {
+    "modelo": "LSTM",
+    "version": "B",
+    "filtro_SMA20": false,
+    "delta": 0.003
+  },
+  "costo_por_lado": 0.001,
+  "capital": 100000.0,
+  "evidencia_T4_valida": true,
+  "criterios": "modelo: menor RMSE VA; regla: mayor rendimiento neto VA, empate menor drawdown",
+  "huella_sha256": "8e746e0d863afb02e185765dbd6f508acc6c4a39dbc0b3b6b440ae10c70b65d0"
+}
