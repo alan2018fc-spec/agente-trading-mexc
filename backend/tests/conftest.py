@@ -112,12 +112,12 @@ def entorno(tmp_path):
     riesgo = Riesgo.cargar(aj.riesgo_path)
     llm_cfg = json.loads(aj.llm_path.read_text(encoding="utf-8"))
 
-    def construir(db_path=None):
+    def construir(db_path=None, notificador=None):
         db = DB(db_path or aj.db_path)
         mexc = ClienteMEXC(transporte=httpx.MockTransport(fm), espera_inicial=0.01)
         llm = ClienteLLM("http://gateway", aj.llm_gateway_key, aj.ollama_modelo, espera_inicial=0.01,
                          transporte=httpx.MockTransport(fl))
-        return Agente(aj, riesgo, db, mexc, llm, ModeloLSTM(aj.modelo_dir), llm_cfg)
+        return Agente(aj, riesgo, db, mexc, llm, ModeloLSTM(aj.modelo_dir), llm_cfg, notificador)
 
     return {"aj": aj, "mexc": fm, "llm": fl, "riesgo": riesgo, "construir": construir}
 

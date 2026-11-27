@@ -93,7 +93,26 @@ Solo se pueden cambiar con sesión iniciada y con el agente detenido o pausado; 
 
 ## Interfaz
 
-Pestañas: **Operación** (pares, pronóstico, indicadores, acción propuesta y motivo, riesgo, posición y patrimonio), **Cerebro** (constelación animada de los componentes con su estado: feeds, validador, variables, LSTM, LLM, herramientas, validador JSON, riesgo, Paper y registro), **Red neuronal** (la LSTM capa por capa con las activaciones reales del último pronóstico de cada par y los pesos entrenados), **Rendimiento** (agente con LLM contra modelo sin LLM y comprar y mantener), **Riesgo**, **Historial**, **Replay** y **Sistema** (latencias, memoria, feeds e integridad de los 15 pares y bitácora).
+Pestañas: **Operación** (rendimiento, pares, pronóstico, indicadores, acción propuesta y motivo, riesgo y posición), **Cerebro** (constelación animada de los componentes con su estado: feeds, validador, variables, LSTM, LLM, herramientas, validador JSON, riesgo, Paper y registro), **Red neuronal** (la LSTM capa por capa con las activaciones reales del último pronóstico de cada par y los pesos entrenados), **Rendimiento** (rendimiento acumulado en % del agente con LLM contra modelo sin LLM y comprar y mantener), **Riesgo**, **Historial**, **Replay** y **Sistema** (latencias, memoria, avisos por WhatsApp, feeds e integridad de los 15 pares y bitácora).
+
+## Avisos por WhatsApp
+
+Cuando el modelo o el agente detectan una **oportunidad de compra** (pronóstico > 0.30 % o compra aprobada), el backend manda un WhatsApp con el par, la vela, el pronóstico, el precio de cierre, qué hizo el agente y su motivo. Se avisa **una sola vez por par y vela**; solo en la operación en vivo (no en el replay). Si el aviso falla, se registra en la bitácora y el trading sigue igual.
+
+Proveedores gratuitos (se elige con `WHATSAPP_PROVEEDOR` en `backend\.env`):
+
+**GREEN-API (recomendado).** Plan Developer gratis; vinculas tu propio WhatsApp como en WhatsApp Web y el agente te escribe a tu propio chat.
+
+1. Crea una cuenta en `console.green-api.com` y crea una instancia con el plan **Developer** (gratis).
+2. En la instancia, escanea el QR desde tu celular: WhatsApp → Dispositivos vinculados → Vincular un dispositivo.
+3. Copia `apiUrl`, `idInstance` y `apiTokenInstance` a `backend\.env` como `GREENAPI_URL`, `GREENAPI_ID_INSTANCE` y `GREENAPI_TOKEN` (deja `WHATSAPP_PROVEEDOR=greenapi`). `WHATSAPP_TELEFONO` puede quedar vacío: se usa tu número vinculado.
+4. Reinicia `iniciar.ps1` y en **Sistema → Avisos por WhatsApp** pulsa **Enviar mensaje de prueba**. Te llega en el chat contigo mismo ("Tú").
+
+Es una API no oficial (funciona como un dispositivo vinculado); como solo te escribes a ti mismo, el riesgo es bajo. Puedes desvincularla cuando quieras desde WhatsApp.
+
+**CallMeBot.** Alternativa sin vincular dispositivos, pero a veces su bot está lleno y no da claves nuevas: sigue https://www.callmebot.com/blog/free-api-whatsapp-messages/, y pon `WHATSAPP_PROVEEDOR=callmebot`, `WHATSAPP_TELEFONO` (ej. `+5215512345678`) y `WHATSAPP_APIKEY`.
+
+Las claves solo viven en `backend/.env` y se ocultan en los logs.
 
 ## Replay
 

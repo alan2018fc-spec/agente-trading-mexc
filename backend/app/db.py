@@ -46,6 +46,10 @@ CREATE TABLE IF NOT EXISTS patrimonio (
   modo TEXT NOT NULL, estrategia TEXT NOT NULL, fecha_vela TEXT NOT NULL, ts_utc TEXT NOT NULL,
   efectivo REAL NOT NULL, posiciones REAL NOT NULL, patrimonio REAL NOT NULL,
   PRIMARY KEY (modo, estrategia, fecha_vela));
+CREATE TABLE IF NOT EXISTS notificaciones (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, ts_utc TEXT NOT NULL, modo TEXT NOT NULL, simbolo TEXT NOT NULL,
+  fecha_vela TEXT NOT NULL, canal TEXT NOT NULL, estado TEXT NOT NULL, detalle TEXT, mensaje TEXT,
+  UNIQUE (modo, simbolo, fecha_vela, canal));
 CREATE TABLE IF NOT EXISTS eventos (
   id INTEGER PRIMARY KEY AUTOINCREMENT, ts_utc TEXT NOT NULL, nivel TEXT NOT NULL, etapa TEXT NOT NULL,
   tipo TEXT NOT NULL, mensaje TEXT NOT NULL, detalle TEXT);

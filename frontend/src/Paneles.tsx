@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, Ciclo, Decision, Estado, Evento, Feed, Metrica, Orden, PuntoPatrimonio, Salud } from "./api";
+import { api, Aviso, Ciclo, Decision, Estado, Evento, Feed, Metrica, Orden, PuntoPatrimonio, Salud } from "./api";
 import { GraficaPatrimonio } from "./Grafica";
 import { hora, NOMBRE_ESTRATEGIA, num, pct, pctDec, usd } from "./formato";
 
@@ -21,10 +21,8 @@ export function Operacion({ estado, tick }: { estado: Estado; tick: number }) {
   return (
     <>
       <section className="tarjetas">
-        <div className="tarjeta"><div className="valor">{usd(cuenta?.patrimonio)}</div><div className="nombre">Patrimonio Paper (USDT, base {usd(estado.riesgo.capital_inicial, 0)})</div></div>
         <div className="tarjeta"><div className={`valor ${(ag?.rendimiento_neto_pct ?? 0) >= 0 ? "pos" : "neg"}`}>{pct(ag?.rendimiento_neto_pct)}</div><div className="nombre">Rendimiento neto</div></div>
         <div className="tarjeta"><div className="valor">{pct(ag?.drawdown_max_pct)}</div><div className="nombre">Drawdown máximo</div></div>
-        <div className="tarjeta"><div className="valor">{usd(cuenta?.efectivo)}</div><div className="nombre">Efectivo</div></div>
         <div className="tarjeta"><div className="valor">{cuenta?.posiciones.length ?? 0} / 15</div><div className="nombre">Posiciones abiertas</div></div>
         <div className="tarjeta"><div className="valor">{ag?.win_rate_pct == null ? "—" : `${ag.win_rate_pct.toFixed(1)} %`}</div><div className="nombre">Win rate ({ag?.operaciones_cerradas ?? 0} cerradas)</div></div>
         <div className="tarjeta"><div className="valor">{ag?.acciones_rechazadas ?? 0}</div><div className="nombre">Acciones rechazadas por riesgo</div></div>
@@ -119,7 +117,7 @@ export function RiesgoPanel({ estado, alCambiar }: { estado: Estado; alCambiar: 
         <h2>Estado de riesgo</h2>
         <table><tbody>
           <tr><td>Estado del agente</td><td><b>{estado.estado}</b></td></tr>
-          <tr><td>Exposición actual</td><td>{usd(expo)} USDT ({cuenta ? ((expo / cuenta.patrimonio) * 100).toFixed(1) : 0} %)</td></tr>
+          <tr><td>Exposición actual</td><td>{cuenta ? ((expo / cuenta.patrimonio) * 100).toFixed(1) : 0} % del patrimonio</td></tr>
           <tr><td>Posiciones abiertas</td><td>{cuenta?.posiciones.length ?? 0}</td></tr>
           <tr><td>Motivo</td><td>{estado.motivo || "—"}</td></tr>
         </tbody></table>
@@ -206,6 +204,7 @@ export function Sistema({ salud, estado, tick }: { salud: Salud | null; estado: 
           <tr><td>Estado</td><td>{salud?.llm.ok ? "disponible" : (salud?.llm.error ?? "—")}</td></tr>
         </tbody></table></div>
       </section>
+      <WhatsApp tick={tick} />
       <Feeds tick={tick} />
       <section><h2>Bitácora de eventos y errores</h2>
         <div className="tabla"><table><thead><tr><th>Hora</th><th>Nivel</th><th>Etapa</th><th>Tipo</th><th>Mensaje</th></tr></thead>
@@ -227,6 +226,33 @@ function Feeds({ tick }: { tick: number }) {
         <div className="tabla"><table><thead><tr><th>Símbolo</th><th>Estado</th><th>Velas cerradas</th><th>Última vela</th><th>Antigüedad</th><th>Latencia</th><th>Revisado</th><th>Detalle</th></tr></thead>
           <tbody>{filas.map(([s, x]) => <tr key={s}><td><b>{s}</b></td><td className={x.estado === "ok" ? "ok" : "rechazo"}>{x.estado}</td><td>{x.velas ?? "—"}</td><td>{x.ultima_vela ?? "—"}</td>
             <td>{x.antiguedad_h == null ? "—" : `${x.antiguedad_h.toFixed(1)} h`}</td><td>{x.latencia_ms ? `${x.latencia_ms} ms` : "—"}</td><td>{hora(x.revisado_utc)}</td><td className="motivo">{x.mensaje || ""}</td></tr>)}</tbody></table></div>}
+    </section>
+  );
+}
+
+function WhatsApp({ tick }: { tick: number }) {
+  const [d, setD] = useState<{ configurado: boolean; destino: string; proveedor: string; avisos: Aviso[] } | null>(null);
+  const [msg, setMsg] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  useEffect(() => { api.avisos().then(setD).catch(() => undefined); }, [tick]);
+  const probar = async () => {
+    setEnviando(true); setMsg("");
+    try { const r = await api.probarWhatsapp(); setMsg(`Mensaje de prueba enviado a ${r.destino}. Revisa tu WhatsApp.`); }
+    catch (e) { setMsg((e as Error).message); }
+    finally { setEnviando(false); api.avisos().then(setD).catch(() => undefined); }
+  };
+  return (
+    <section>
+      <div className="cab"><h2>Avisos por WhatsApp (oportunidades de compra)</h2>
+        <button disabled={enviando || !d?.configurado} onClick={probar}>{enviando ? "Enviando…" : "Enviar mensaje de prueba"}</button></div>
+      <p className="nota">Estado: <b className={d?.configurado ? "ok" : "rechazo"}>{d?.configurado ? `configurado (${d.destino})` : "sin configurar"}</b>{d ? ` · proveedor ${d.proveedor === "greenapi" ? "GREEN-API" : "CallMeBot"}` : ""}.
+        {" "}Se avisa una vez por par y vela cuando el modelo o el agente detectan una compra. Las claves viven solo en <code>backend/.env</code>.</p>
+      {msg && <p className="nota">{msg}</p>}
+      {!d?.avisos.length ? <p className="vacio">Todavía no hay avisos.</p> :
+        <div className="tabla"><table><thead><tr><th>Hora</th><th>Par</th><th>Vela</th><th>Estado</th><th>Mensaje</th></tr></thead>
+          <tbody>{d.avisos.map((a, i) => <tr key={i}><td>{hora(a.ts_utc)}</td><td><b>{a.simbolo}</b></td><td>{a.fecha_vela}</td>
+            <td className={a.estado === "enviado" ? "ok" : "rechazo"} title={a.detalle ?? ""}>{a.estado}</td>
+            <td className="motivo" style={{ whiteSpace: "pre-line" }}>{a.mensaje}</td></tr>)}</tbody></table></div>}
     </section>
   );
 }

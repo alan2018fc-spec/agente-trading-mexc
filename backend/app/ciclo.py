@@ -20,6 +20,7 @@ from .db import DB, ahora_iso
 from .llm import ClienteLLM, LLMNoDisponible, LLMRespuestaInvalida
 from .mexc import ClienteMEXC, MexcError
 from .modelo import ModeloError, ModeloLSTM, Variables
+from .notificador import NotificadorWhatsApp, mensaje_oportunidad
 from .paper import OrdenDuplicada, OrdenInvalida, Paper, SaldoInsuficiente
 from .riesgo import ContextoRiesgo, revisar
 from .variables import DIA_MS, DatosInvalidos, Vela, calcular
@@ -52,8 +53,9 @@ class ResultadoCiclo:
 
 class Agente:
     def __init__(self, ajustes: Ajustes, riesgo: Riesgo, db: DB, mexc: ClienteMEXC, llm: ClienteLLM,
-                 modelo: ModeloLSTM, llm_cfg: dict):
+                 modelo: ModeloLSTM, llm_cfg: dict, notificador: NotificadorWhatsApp | None = None):
         self.aj, self.r, self.db, self.mexc, self.llm, self.modelo = ajustes, riesgo, db, mexc, llm, modelo
+        self.notificador = notificador
         self.llm_cfg = llm_cfg
         self.paper = Paper(db, riesgo)
         self.delta = float(modelo.regla["delta"])
@@ -299,10 +301,30 @@ class Agente:
                         fila["latencia"], self.modelo.version,
                         json.dumps({"seq": v.seq, "dist_sma20": v.dist_sma20, "vol20": v.vol20, "cierre": v.cierre, "sma20": v.sma20})))
             res.decisiones += 1
+            if modo == "vivo" and (fila["accion_modelo"] == "COMPRAR" or accion == "COMPRAR"):
+                await self._avisar(modo, s, fecha, v.cierre, p, fila["accion_modelo"], accion if rev_aprob else "SIN_ORDEN",
+                                   rev_aprob, fila["justificacion"])
 
         self._cerrar_ciclo(ciclo_id, res, t0, "COMPLETO")
         self.db.set(f"ultima_vela_{modo}", fecha)
         return res
+
+    # ---------------------------------------------------------------- avisos
+    async def _avisar(self, modo, simbolo, fecha, cierre, pron, acc_regla, acc_final, aprobada, justificacion) -> None:
+        """Un aviso por par y vela (aunque el ciclo se repita). Un fallo al avisar nunca afecta al trading."""
+        if self.notificador is None:
+            return
+        texto = mensaje_oportunidad(simbolo, fecha, cierre, pron, self.delta, acc_regla, acc_final, aprobada, justificacion)
+        cur = self.db.ej("INSERT OR IGNORE INTO notificaciones(ts_utc, modo, simbolo, fecha_vela, canal, estado, mensaje) "
+                         "VALUES(?,?,?,?,?,?,?)", (ahora_iso(), modo, simbolo, fecha, "whatsapp", "pendiente", texto))
+        if cur.rowcount == 0:
+            return                                            # ya se avisó esta oportunidad
+        ok, detalle = await self.notificador.enviar(texto)
+        estado = "enviado" if ok else ("sin_configurar" if not self.notificador.configurado else "error")
+        self.db.ej("UPDATE notificaciones SET estado=?, detalle=?, ts_utc=? WHERE modo=? AND simbolo=? AND fecha_vela=? AND canal='whatsapp'",
+                   (estado, detalle, ahora_iso(), modo, simbolo, fecha))
+        if estado == "error":
+            self.db.evento("ALERTA", "whatsapp", "aviso_fallido", f"{simbolo} {fecha}: {detalle}")
 
     # ---------------------------------------------------------------- auxiliares
     def _accion_regla(self, pronostico: float, tiene_posicion: bool) -> str:

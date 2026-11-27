@@ -32,6 +32,8 @@ export const api = {
   cerebro: () => pedir<Cerebro>("/api/cerebro"),
   red: (simbolo: string) => pedir<Red>(`/api/red?simbolo=${simbolo}`),
   feeds: (verificar = false) => pedir<Record<string, Feed>>(`/api/feeds${verificar ? "?verificar=true" : ""}`),
+  avisos: () => pedir<{ configurado: boolean; destino: string; proveedor: string; avisos: Aviso[] }>("/api/notificaciones"),
+  probarWhatsapp: () => pedir<{ ok: boolean; destino: string }>("/api/notificaciones/prueba", { method: "POST" }),
   cambiarRiesgo: (cambios: Record<string, number>) =>
     pedir("/api/config/riesgo", { method: "PUT", body: JSON.stringify(cambios) }),
 };
@@ -44,7 +46,9 @@ export interface Estado {
   modelo: { version: string; huella: string; regla: { delta: number; filtro_SMA20: boolean }; dif_vs_keras: number; run_id: string };
   llm: { modelo: string }; riesgo: Record<string, any>; cuentas: Record<string, Cuenta>;
   replay: Record<string, any>;
+  whatsapp: { configurado: boolean; destino: string; proveedor: string };
 }
+export interface Aviso { ts_utc: string; simbolo: string; fecha_vela: string; estado: string; detalle: string | null; mensaje: string }
 export interface Decision {
   id: number; modo: string; simbolo: string; fecha_vela: string; ts_utc: string; cierre: number | null;
   pronostico: number | null; dist_sma20: number | null; vol20: number | null; sma20: number | null;

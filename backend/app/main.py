@@ -29,6 +29,7 @@ from .db import DB
 from .llm import ClienteLLM
 from .mexc import ClienteMEXC, MexcError
 from .modelo import ModeloLSTM, Variables
+from .notificador import NotificadorWhatsApp
 from .variables import DatosInvalidos, calcular, validar_velas
 from .db import ahora_iso
 
@@ -39,7 +40,7 @@ class _SinSecretos(logging.Filter):
     """Evita que una clave termine en los logs."""
     def filter(self, record: logging.LogRecord) -> bool:
         msg = record.getMessage()
-        for nombre in ("BACKEND_API_KEY", "ADMIN_PASSWORD", "LLM_GATEWAY_KEY"):
+        for nombre in ("BACKEND_API_KEY", "ADMIN_PASSWORD", "LLM_GATEWAY_KEY", "WHATSAPP_APIKEY", "WHATSAPP_TELEFONO", "GREENAPI_TOKEN"):
             v = os.getenv(nombre)
             if v and v in msg:
                 record.msg, record.args = msg.replace(v, "***"), ()
@@ -50,6 +51,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
                     handlers=[logging.FileHandler(BASE / "logs" / "backend.log", encoding="utf-8"), logging.StreamHandler()])
 for h in logging.getLogger().handlers:
     h.addFilter(_SinSecretos())
+logging.getLogger("httpx").setLevel(logging.WARNING)      # httpx registraría URLs con claves (CallMeBot)
 log = logging.getLogger("api")
 
 SESIONES: dict[str, float] = {}
@@ -66,7 +68,7 @@ DURACION_SESION = 12 * 3600
 
 
 def crear_app(ajustes: Ajustes | None = None, mexc: ClienteMEXC | None = None, llm: ClienteLLM | None = None,
-              iniciar_bucle: bool = True) -> FastAPI:
+              iniciar_bucle: bool = True, notificador: NotificadorWhatsApp | None = None) -> FastAPI:
     aj = ajustes or Ajustes.desde_entorno()
     llm_cfg = json.loads(aj.llm_path.read_text(encoding="utf-8"))
     if llm_cfg.get("modelo_permitido") and llm_cfg["modelo_permitido"] != aj.ollama_modelo:
@@ -82,13 +84,16 @@ def crear_app(ajustes: Ajustes | None = None, mexc: ClienteMEXC | None = None, l
                                           temperatura=llm_cfg.get("temperatura", 0.1), timeout_s=llm_cfg.get("timeout_s", 120),
                                           reintentos=llm_cfg.get("reintentos", 3))
         app.state.modelo = ModeloLSTM(aj.modelo_dir)
-        app.state.agente = Agente(aj, app.state.riesgo, app.state.db, app.state.mexc, app.state.llm, app.state.modelo, llm_cfg)
+        app.state.whatsapp = notificador or NotificadorWhatsApp()
+        app.state.agente = Agente(aj, app.state.riesgo, app.state.db, app.state.mexc, app.state.llm, app.state.modelo, llm_cfg,
+                                  app.state.whatsapp)
         if iniciar_bucle:
             app.state.agente.iniciar_bucle()          # si estaba ACTIVO antes del reinicio, continúa sin duplicar
         yield
         await app.state.agente.detener_bucle()
         await app.state.mexc.cerrar()
         await app.state.llm.cerrar()
+        await app.state.whatsapp.cerrar()
 
     app = FastAPI(title="Agente de trading MEXC (Paper)", version="1.0", lifespan=vida,
                   description="Backend del agente: modelo LSTM de la práctica + LLM local (Ollama) + riesgo + motor Paper.")
@@ -146,7 +151,9 @@ def crear_app(ajustes: Ajustes | None = None, mexc: ClienteMEXC | None = None, l
                 "modelo": {"version": s.modelo.version, "huella": s.modelo.huella, "regla": s.modelo.regla,
                            "dif_vs_keras": s.modelo.diferencia_maxima_vs_keras, "run_id": s.modelo.contrato.get("run_id")},
                 "llm": {"modelo": s.aj.ollama_modelo}, "riesgo": s.riesgo.como_dict(), "cuentas": cuentas,
-                "replay": ag.replay}
+                "replay": ag.replay,
+                "whatsapp": {"configurado": s.whatsapp.configurado, "destino": s.whatsapp.destino,
+                             "proveedor": s.whatsapp.proveedor}}
 
     @app.get("/api/pares", tags=["agente"], dependencies=[Depends(autenticado)])
     async def pares(request: Request, modo: str = "vivo"):
@@ -290,6 +297,24 @@ def crear_app(ajustes: Ajustes | None = None, mexc: ClienteMEXC | None = None, l
             except (MexcError, DatosInvalidos) as e:
                 out[sym] = {"estado": "error", "mensaje": str(e), "revisado_utc": ahora_iso()}
         return out
+
+    # ---------------------------------------------------------------- avisos por WhatsApp
+    @app.get("/api/notificaciones", tags=["avisos"], dependencies=[Depends(autenticado)])
+    async def notificaciones(request: Request, limite: int = 100):
+        s = request.app.state
+        return {"configurado": s.whatsapp.configurado, "destino": s.whatsapp.destino, "proveedor": s.whatsapp.proveedor,
+                "avisos": s.db.filas("SELECT ts_utc, simbolo, fecha_vela, estado, detalle, mensaje FROM notificaciones "
+                                     "ORDER BY id DESC LIMIT ?", (min(limite, 500),))}
+
+    @app.post("/api/notificaciones/prueba", tags=["avisos"], dependencies=[Depends(autenticado)])
+    async def prueba_whatsapp(request: Request):
+        s = request.app.state
+        ok, detalle = await s.whatsapp.enviar("Prueba del agente de trading MEXC (Paper): los avisos de oportunidades de "
+                                              "compra llegarán a este chat.")
+        s.db.evento("INFO" if ok else "ALERTA", "whatsapp", "prueba", f"Mensaje de prueba: {detalle}")
+        if not ok:
+            raise HTTPException(400 if not s.whatsapp.configurado else 502, detalle)
+        return {"ok": True, "destino": s.whatsapp.destino}
 
     # ---------------------------------------------------------------- control (protegido)
     @app.post("/api/agente/{accion}", tags=["control"], dependencies=[Depends(autenticado)])
