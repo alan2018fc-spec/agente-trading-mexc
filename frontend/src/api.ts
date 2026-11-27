@@ -20,6 +20,7 @@ export const api = {
   estado: () => pedir<Estado>("/api/estado"),
   pares: (modo = "vivo") => pedir<{ fecha_vela: string | null; pares: Decision[] }>(`/api/pares?modo=${modo}`),
   decisiones: (modo = "vivo") => pedir<Decision[]>(`/api/decisiones?modo=${modo}`),
+  pnl: (modo = "vivo") => pedir<Pnl>(`/api/pnl?modo=${modo}`),
   ordenes: (modo = "vivo") => pedir<Orden[]>(`/api/ordenes?modo=${modo}`),
   eventos: () => pedir<Evento[]>("/api/eventos"),
   ciclos: (modo = "vivo") => pedir<Ciclo[]>(`/api/ciclos?modo=${modo}`),
@@ -47,6 +48,7 @@ export interface Estado {
   llm: { modelo: string }; riesgo: Record<string, any>; cuentas: Record<string, Cuenta>;
   replay: Record<string, any>;
   whatsapp: { configurado: boolean; destino: string; proveedor: string };
+  version?: string; fecha_version?: string;
 }
 export interface Aviso { ts_utc: string; simbolo: string; fecha_vela: string; estado: string; detalle: string | null; mensaje: string }
 export interface Decision {
@@ -93,3 +95,14 @@ export interface Red {
   arquitectura: { pasos: number; lstm: number; pares: number; indicadores: number; densa: number; semillas: number[] };
   decision: { accion_final: string; motivo: string } | null;
 }
+
+export interface PnlEstrategia {
+  estrategia: string; pnl_realizado: number; pnl_no_realizado: number; pnl_total: number; pnl_total_pct: number;
+  cerradas: number; abiertas: number; ganadoras: number; win_rate_pct: number | null;
+}
+export interface Operacion {
+  estrategia: string; simbolo: string; estado: "cerrada" | "abierta"; cantidad: number; fecha_entrada: string;
+  precio_entrada: number; fecha_salida: string | null; precio_salida: number; invertido: number; pnl: number; pnl_pct: number;
+}
+export interface PnlDiario { estrategia: string; fecha_vela: string; pnl: number; pnl_pct: number; acumulado_pct: number }
+export interface Pnl { modo: string; precios_al: string | null; estrategias: PnlEstrategia[]; operaciones: Operacion[]; diario: PnlDiario[] }

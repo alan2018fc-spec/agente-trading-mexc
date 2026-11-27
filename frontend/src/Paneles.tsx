@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { OperacionesPnl } from "./Pnl";
 import { api, Aviso, Ciclo, Decision, Estado, Evento, Feed, Metrica, Orden, PuntoPatrimonio, Salud } from "./api";
 import { GraficaPatrimonio } from "./Grafica";
 import { hora, NOMBRE_ESTRATEGIA, num, pct, pctDec, usd } from "./formato";
@@ -173,6 +174,7 @@ export function Replay({ estado, alLanzar, tick }: { estado: Estado; alLanzar: (
         <p>Estado: <b>{rp.estado ?? "sin ejecutar"}</b> {rp.avance != null && `· ${rp.avance}/${rp.dias} días`} {rp.desde && `· ${rp.desde} → ${rp.hasta}`} {rp.error && <span className="error"> · {rp.error}</span>}</p>
       </section>
       <Rendimiento capital={estado.riesgo.capital_inicial} modo="replay" tick={tick} />
+      <OperacionesPnl tick={tick} modo="replay" />
     </>
   );
 }

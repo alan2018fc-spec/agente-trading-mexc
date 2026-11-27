@@ -154,3 +154,22 @@ def test_comprar_y_mantener_invierte_lo_mismo_en_cada_par(entorno):
     correr(f())
     montos = [o["monto"] + o["costo"] for o in ag.db.filas("SELECT * FROM ordenes WHERE estrategia='comprar_mantener'")]
     assert len(montos) == 15 and min(montos) > 0.0667 * 50_000 * 0.99
+
+
+def test_operaciones_y_pnl_cuadran_con_el_patrimonio(entorno):
+    """PnL realizado + no realizado = patrimonio final − capital, para cada estrategia."""
+    from app import metricas
+    ag = entorno["construir"]()
+
+    async def f():
+        ag.lanzar_replay(12, usar_llm=False)
+        await ag._tarea_replay
+    correr(f())
+    cap = ag.r.capital_inicial
+    d = metricas.operaciones_pnl(ag.db, "replay", cap)
+    assert d["operaciones"] and d["diario"]
+    for e in d["estrategias"]:
+        fin = ag.db.fila("SELECT patrimonio FROM patrimonio WHERE modo='replay' AND estrategia=? ORDER BY fecha_vela DESC "
+                         "LIMIT 1", (e["estrategia"],))["patrimonio"]
+        assert abs(e["pnl_total"] - (fin - cap)) < 1e-6 * cap
+    assert any(o["estado"] == "cerrada" for o in d["operaciones"])

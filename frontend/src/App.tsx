@@ -3,9 +3,10 @@ import { api, Estado, NoAutenticado, Salud } from "./api";
 import { hora } from "./formato";
 import { Cerebro } from "./Cerebro";
 import { Historial, Operacion, Rendimiento, Replay, RiesgoPanel, Sistema } from "./Paneles";
+import { OperacionesPnl } from "./Pnl";
 import { RedNeuronal } from "./RedNeuronal";
 
-const PESTANAS = ["Operación", "Cerebro", "Red neuronal", "Rendimiento", "Riesgo", "Historial", "Replay", "Sistema"] as const;
+const PESTANAS = ["Operación", "Operaciones y PnL", "Cerebro", "Red neuronal", "Rendimiento", "Riesgo", "Historial", "Replay", "Sistema"] as const;
 
 function Login({ alEntrar }: { alEntrar: () => void }) {
   const [clave, setClave] = useState("");
@@ -103,11 +104,12 @@ export default function App() {
         {pestana === "Red neuronal" && <RedNeuronal />}
         {pestana === "Rendimiento" && <Rendimiento capital={estado.riesgo.capital_inicial} modo="vivo" tick={tick} />}
         {pestana === "Riesgo" && <RiesgoPanel estado={estado} alCambiar={cargar} />}
+        {pestana === "Operaciones y PnL" && <OperacionesPnl tick={tick} />}
         {pestana === "Historial" && <Historial tick={tick} />}
         {pestana === "Replay" && <Replay estado={estado} alLanzar={cargar} tick={tick} />}
         {pestana === "Sistema" && <Sistema salud={salud} estado={estado} tick={tick} />}
       </main>
-      <footer>Proyecto académico · simulación con dinero virtual · datos públicos de MEXC · LLM local con Ollama</footer>
+      <footer>{estado?.version ? `v${estado.version} (${estado.fecha_version}) · ` : ""}Proyecto académico · simulación con dinero virtual · datos públicos de MEXC · LLM local con Ollama</footer>
     </div>
   );
 }

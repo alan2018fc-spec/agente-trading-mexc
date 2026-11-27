@@ -30,6 +30,7 @@ from .llm import ClienteLLM
 from .mexc import ClienteMEXC, MexcError
 from .modelo import ModeloLSTM, Variables
 from .notificador import NotificadorWhatsApp
+from .version import FECHA_VERSION, VERSION
 from .variables import DatosInvalidos, calcular, validar_velas
 from .db import ahora_iso
 
@@ -95,7 +96,7 @@ def crear_app(ajustes: Ajustes | None = None, mexc: ClienteMEXC | None = None, l
         await app.state.llm.cerrar()
         await app.state.whatsapp.cerrar()
 
-    app = FastAPI(title="Agente de trading MEXC (Paper)", version="1.0", lifespan=vida,
+    app = FastAPI(title="Agente de trading MEXC (Paper)", version=VERSION, lifespan=vida,
                   description="Backend del agente: modelo LSTM de la práctica + LLM local (Ollama) + riesgo + motor Paper.")
 
     # ---------------------------------------------------------------- autenticación
@@ -145,7 +146,7 @@ def crear_app(ajustes: Ajustes | None = None, mexc: ClienteMEXC | None = None, l
             cuentas[e] = {"efectivo": s.agente.paper.efectivo("vivo", e),
                           "patrimonio": filas[0]["patrimonio"] if filas else capital,
                           "posiciones": list(s.agente.paper.posiciones("vivo", e).values())}
-        return {"estado": ag.estado, "motivo": s.db.get("motivo_estado", ""), "modo": "PAPER", "trading_real": TRADING_REAL_HABILITADO,
+        return {"version": VERSION, "fecha_version": FECHA_VERSION, "estado": ag.estado, "motivo": s.db.get("motivo_estado", ""), "modo": "PAPER", "trading_real": TRADING_REAL_HABILITADO,
                 "ultima_vela_procesada": ag.ultima_procesada("vivo"), "ultimo_tick": ag.ultimo_tick,
                 "duracion_ultimo_ciclo_s": ag.ultima_duracion_ciclo_s, "poll_segundos": s.aj.poll_segundos,
                 "modelo": {"version": s.modelo.version, "huella": s.modelo.huella, "regla": s.modelo.regla,
@@ -192,6 +193,11 @@ def crear_app(ajustes: Ajustes | None = None, mexc: ClienteMEXC | None = None, l
     async def ver_metricas(request: Request, modo: str = "vivo"):
         s = request.app.state
         return metricas.comparacion(s.db, modo, s.riesgo.capital_inicial)
+
+    @app.get("/api/pnl", tags=["registro"], dependencies=[Depends(autenticado)])
+    async def ver_pnl(request: Request, modo: str = "vivo"):
+        s = request.app.state
+        return metricas.operaciones_pnl(s.db, modo, s.riesgo.capital_inicial)
 
     @app.get("/api/salud", tags=["salud"], dependencies=[Depends(autenticado)])
     async def salud(request: Request):

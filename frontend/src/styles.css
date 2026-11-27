@@ -75,3 +75,4 @@ code { background: #0f141b; padding: 1px 5px; border-radius: 4px; }
 .selector button { padding: 4px 10px; font-size: 12px; }
 .selector button.activa { background: var(--azul); border-color: var(--azul); color: #fff; }
 nav { flex-wrap: wrap; }
+select { background: var(--panel); color: inherit; border: 1px solid var(--borde); border-radius: 8px; padding: 3px 6px; }

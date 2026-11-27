@@ -96,6 +96,7 @@ class Paper:
 
     def registrar_patrimonio(self, modo: str, estrategia: str, fecha_vela: str, precios: dict[str, float]) -> float:
         ef, pos, eq = self.valorar(modo, estrategia, precios)
+        self.db.set(f"precios_valuacion_{modo}", {"fecha": fecha_vela, "precios": precios})   # para el PnL no realizado
         self.db.ej("INSERT INTO patrimonio VALUES(?,?,?,?,?,?,?) ON CONFLICT(modo, estrategia, fecha_vela) DO UPDATE SET "
                    "ts_utc=excluded.ts_utc, efectivo=excluded.efectivo, posiciones=excluded.posiciones, patrimonio=excluded.patrimonio",
                    (modo, estrategia, fecha_vela, ahora_iso(), ef, pos, eq))
