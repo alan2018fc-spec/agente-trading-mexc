@@ -1,6 +1,6 @@
 # Agente de trading MEXC (Paper) — proyecto final DL para Finanzas
 
-**Versión actual: v1.5.0 (2026-11-27)** · Paper trading con datos reales de MEXC · 15 pares · LSTM entrenada en T4 · LLM local (Ollama) · avisos por WhatsApp
+**Versión actual: v1.4.0 (2026-11-26)** · Paper trading con datos reales de MEXC · 15 pares · LSTM entrenada en T4 · LLM local (Ollama) · avisos por WhatsApp
 
 Agente que, una vez al día, toma las velas **reales** de la API pública de MEXC para 15 pares, calcula el pronóstico de un modelo LSTM entrenado en una GPU T4, pide a un LLM local (Ollama) una propuesta, la pasa por controles de riesgo deterministas, la ejecuta en un simulador **Paper** y registra todo: operaciones, PnL, decisiones y eventos. Cuando detecta una oportunidad de compra manda un WhatsApp. **No envía órdenes reales**: no existe código firmado ni rutas de órdenes, y `TRADING_REAL=1` impide que arranque.
 
@@ -76,8 +76,7 @@ Otros datos de la operación en vivo: 0 propuestas rechazadas por riesgo, 0 JSON
 
 | Versión | Fecha | Cambios |
 | --- | --- | --- |
-| **v1.5.0** | 2026-11-27 | Vista de solo lectura en Streamlit (`streamlit_app.py`, opcional y no publicada): señales del día con las velas de MEXC y el mismo LSTM, operaciones y PnL, rendimiento y decisiones. `backend/exportar_snapshot.py` exporta el registro del agente |
-| v1.4.0 | 2026-11-26 | Pestaña **Operaciones y PnL** (PnL realizado, no realizado y diario por estrategia; cada operación con entrada, salida y PnL en USDT y %). PnL también en el Replay. `GET /api/pnl`. Versión visible en la interfaz y en `/api/estado`. README completo con resultados reales y capturas |
+| **v1.4.0** | 2026-11-26 | Pestaña **Operaciones y PnL** (PnL realizado, no realizado y diario por estrategia; cada operación con entrada, salida y PnL en USDT y %). PnL también en el Replay. `GET /api/pnl`. Versión visible en la interfaz y en `/api/estado`. README completo con resultados reales y capturas |
 | v1.3.1 | 2026-11-26 | Avisos por WhatsApp con **GREEN-API** (vinculas tu WhatsApp con un QR); CallMeBot queda como alternativa porque su bot no tenía cupo |
 | v1.3.0 | 2026-11-26 | **Avisos por WhatsApp** de oportunidades de compra (una vez por par y vela, solo en vivo; un fallo no afecta al trading). A petición del profesor se quitó de la interfaz el saldo (tarjetas de patrimonio y efectivo) y la gráfica pasó a rendimiento en % |
 | v1.2.1 | 2026-11-21 | LLM: contexto solo en por ciento, la regla como acción por defecto (un desvío debe empezar con `Desvío:`) y temperatura 0 |
@@ -201,12 +200,6 @@ Capturas con la base de datos real de la operación en vivo (abierta en una copi
 | ![Operación](docs/capturas/01_operacion.png) | ![Rendimiento](docs/capturas/05_rendimiento.png) |
 | ![Cerebro](docs/capturas/03_cerebro.png) | ![Red neuronal](docs/capturas/04_red_neuronal.png) |
 | ![Historial](docs/capturas/07_historial.png) | ![Sistema](docs/capturas/09_sistema.png) |
-
-## Vista de solo lectura en Streamlit (opcional)
-
-`streamlit_app.py` es una vista de solo lectura del agente: señales del día con las velas de MEXC y el mismo LSTM, operaciones y PnL, rendimiento y decisiones (estas últimas desde `datos_publicos/snapshot_agente.json`, exportado con `backend/exportar_snapshot.py`; no contiene claves). No envía órdenes, no usa claves y no ejecuta el LLM. No está publicada; la interfaz del sistema es la de React descrita arriba.
-
-Para abrirla en tu computadora: `.venv\Scripts\pip install streamlit pandas requests` y `.venv\Scripts\streamlit run streamlit_app.py`.
 
 ## Operaciones y PnL
 
@@ -345,9 +338,6 @@ backend/
   gateway.py      gateway con API key delante de Ollama
   .env.example    variables de entorno (sin valores)
 frontend/src/     App, Paneles, Pnl, Cerebro, RedNeuronal, Grafica, api, formato, estilos
-streamlit_app.py  vista de solo lectura opcional (Streamlit)
-requirements.txt  dependencias de la vista de Streamlit
-datos_publicos/   registro del agente exportado para esa vista
 scripts/          instalar.ps1, iniciar.ps1, probar.ps1
 docs/capturas/    capturas de la interfaz con datos reales
 ```
