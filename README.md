@@ -2,8 +2,6 @@
 
 **Versión actual: v1.5.0 (2026-11-27)** · Paper trading con datos reales de MEXC · 15 pares · LSTM entrenada en T4 · LLM local (Ollama) · avisos por WhatsApp
 
-**Interfaz pública (Streamlit):** <https://agente-trading-mexc.streamlit.app>
-
 Agente que, una vez al día, toma las velas **reales** de la API pública de MEXC para 15 pares, calcula el pronóstico de un modelo LSTM entrenado en una GPU T4, pide a un LLM local (Ollama) una propuesta, la pasa por controles de riesgo deterministas, la ejecuta en un simulador **Paper** y registra todo: operaciones, PnL, decisiones y eventos. Cuando detecta una oportunidad de compra manda un WhatsApp. **No envía órdenes reales**: no existe código firmado ni rutas de órdenes, y `TRADING_REAL=1` impide que arranque.
 
 ![Operaciones y PnL](docs/capturas/02_operaciones_pnl.png)
@@ -16,7 +14,7 @@ Agente que, una vez al día, toma las velas **reales** de la API pública de MEX
 4. [Arquitectura](#arquitectura)
 5. [Ciclo del agente](#ciclo-del-agente)
 6. [Modelo predictivo (capítulos 7 a 11)](#modelo-predictivo-capítulos-7-a-11)
-7. [Interfaz](#interfaz) y [vista pública en Streamlit](#vista-pública-en-streamlit)
+7. [Interfaz](#interfaz)
 8. [Operaciones y PnL](#operaciones-y-pnl)
 9. [Avisos por WhatsApp](#avisos-por-whatsapp)
 10. [Instalación y operación diaria](#instalación-y-operación-diaria)
@@ -33,7 +31,6 @@ Agente que, una vez al día, toma las velas **reales** de la API pública de MEX
 | # | Requisito | Dónde está |
 | --- | --- | --- |
 | 1 | Presentación ejecutiva del sistema | Se entrega aparte; resume la información de este README |
-| — | Link de la interfaz (Streamlit) | [Vista pública en Streamlit](#vista-pública-en-streamlit): señales del día con datos de MEXC en vivo, operaciones y PnL, rendimiento y decisiones del agente |
 | 2 | Git con el código del sistema | Este repositorio: backend FastAPI, interfaz React + TypeScript, modelo, pruebas y scripts |
 | 3 | README completo, con versiones y avances | Este archivo; ver [Versiones y avances](#versiones-y-avances) |
 | 4 | Datos reales de Polymarket o MEXC | API pública v3 de MEXC: velas diarias cerradas (`/api/v3/klines`), libro (`/api/v3/ticker/bookTicker`) y reglas del par (`/api/v3/exchangeInfo`). Operación en vivo desde la vela del 2026-11-20 |
@@ -79,7 +76,7 @@ Otros datos de la operación en vivo: 0 propuestas rechazadas por riesgo, 0 JSON
 
 | Versión | Fecha | Cambios |
 | --- | --- | --- |
-| **v1.5.0** | 2026-11-27 | **Vista pública en Streamlit** con link: señales del día con las velas de MEXC en vivo y el mismo LSTM, operaciones y PnL, rendimiento, decisiones con la justificación del LLM y el modelo. `backend/exportar_snapshot.py` publica el registro del agente |
+| **v1.5.0** | 2026-11-27 | Vista de solo lectura en Streamlit (`streamlit_app.py`, opcional y no publicada): señales del día con las velas de MEXC y el mismo LSTM, operaciones y PnL, rendimiento y decisiones. `backend/exportar_snapshot.py` exporta el registro del agente |
 | v1.4.0 | 2026-11-26 | Pestaña **Operaciones y PnL** (PnL realizado, no realizado y diario por estrategia; cada operación con entrada, salida y PnL en USDT y %). PnL también en el Replay. `GET /api/pnl`. Versión visible en la interfaz y en `/api/estado`. README completo con resultados reales y capturas |
 | v1.3.1 | 2026-11-26 | Avisos por WhatsApp con **GREEN-API** (vinculas tu WhatsApp con un QR); CallMeBot queda como alternativa porque su bot no tenía cupo |
 | v1.3.0 | 2026-11-26 | **Avisos por WhatsApp** de oportunidades de compra (una vez por par y vela, solo en vivo; un fallo no afecta al trading). A petición del profesor se quitó de la interfaz el saldo (tarjetas de patrimonio y efectivo) y la gráfica pasó a rendimiento en % |
@@ -205,29 +202,11 @@ Capturas con la base de datos real de la operación en vivo (abierta en una copi
 | ![Cerebro](docs/capturas/03_cerebro.png) | ![Red neuronal](docs/capturas/04_red_neuronal.png) |
 | ![Historial](docs/capturas/07_historial.png) | ![Sistema](docs/capturas/09_sistema.png) |
 
-## Vista pública en Streamlit
+## Vista de solo lectura en Streamlit (opcional)
 
-La interfaz completa (React) corre en la computadora del equipo, junto al LLM local. Para tener un **link público** hay una vista de solo lectura en Streamlit Community Cloud: `streamlit_app.py`.
+`streamlit_app.py` es una vista de solo lectura del agente: señales del día con las velas de MEXC y el mismo LSTM, operaciones y PnL, rendimiento y decisiones (estas últimas desde `datos_publicos/snapshot_agente.json`, exportado con `backend/exportar_snapshot.py`; no contiene claves). No envía órdenes, no usa claves y no ejecuta el LLM. No está publicada; la interfaz del sistema es la de React descrita arriba.
 
-| Pestaña | Qué muestra |
-| --- | --- |
-| Señales de hoy | Descarga en ese momento las velas diarias cerradas de los 15 pares desde la API pública de MEXC y calcula el pronóstico con el **mismo** LSTM del agente y la regla δ = 0.30 % |
-| Operaciones y PnL | PnL por estrategia, cada operación y el PnL diario (en vivo y Replay) |
-| Rendimiento | Rendimiento acumulado en % de las tres estrategias, drawdown y win rate |
-| Decisiones del agente | Cada decisión en vivo: regla, LLM, decisión final, revisión de riesgo y justificación del LLM |
-| Modelo y Cómo funciona | Datos, arquitectura, métricas en TE y el ciclo del agente |
-
-Las operaciones, el PnL y las decisiones salen de `datos_publicos/snapshot_agente.json`, exportado de la base real del agente. No contiene claves. Para actualizarlo:
-
-```powershell
-.venv\Scripts\python backend\exportar_snapshot.py
-```
-
-y sube `datos_publicos/snapshot_agente.json` a GitHub: Streamlit vuelve a desplegar solo. La página no envía órdenes, no usa claves y no ejecuta el LLM.
-
-Despliegue (una sola vez): en <https://share.streamlit.io> entra con GitHub → **Create app** → repositorio `alan2018fc-spec/agente-trading-mexc`, rama `main`, archivo `streamlit_app.py` → **Deploy**. Usa `requirements.txt` de la raíz (streamlit, numpy, pandas, requests).
-
-Para probarla en tu computadora: `.venv\Scripts\pip install streamlit pandas requests` y `.venv\Scripts\streamlit run streamlit_app.py`.
+Para abrirla en tu computadora: `.venv\Scripts\pip install streamlit pandas requests` y `.venv\Scripts\streamlit run streamlit_app.py`.
 
 ## Operaciones y PnL
 
@@ -366,9 +345,9 @@ backend/
   gateway.py      gateway con API key delante de Ollama
   .env.example    variables de entorno (sin valores)
 frontend/src/     App, Paneles, Pnl, Cerebro, RedNeuronal, Grafica, api, formato, estilos
-streamlit_app.py  vista pública de solo lectura (Streamlit Community Cloud)
+streamlit_app.py  vista de solo lectura opcional (Streamlit)
 requirements.txt  dependencias de la vista de Streamlit
-datos_publicos/   registro del agente exportado para la vista pública
+datos_publicos/   registro del agente exportado para esa vista
 scripts/          instalar.ps1, iniciar.ps1, probar.ps1
 docs/capturas/    capturas de la interfaz con datos reales
 ```
